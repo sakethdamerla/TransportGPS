@@ -470,7 +470,7 @@ function App() {
               renderMapContent()
             ) : (
               <iframe
-                src={selectedVehicle.uiiframe}
+                src={selectedVehicle.uiiframe.startsWith('http') ? selectedVehicle.uiiframe : `${API_BASE_URL.replace(/\/api$/, '')}${selectedVehicle.uiiframe}`}
                 title={`Live tracking for ${selectedVehicle.name}`}
                 className="iframe-container"
               />
@@ -946,7 +946,11 @@ function App() {
                     {viewType !== 'iframe' || !selectedVehicle ? (
                       renderMapContent()
                     ) : (
-                      <iframe src={selectedVehicle.uiiframe} title={`Live tracking for ${selectedVehicle.name}`} className="iframe-container" />
+                      <iframe
+                        src={selectedVehicle.uiiframe.startsWith('http') ? selectedVehicle.uiiframe : `${API_BASE_URL.replace(/\/api$/, '')}${selectedVehicle.uiiframe}`}
+                        title={`Live tracking for ${selectedVehicle.name}`}
+                        className="iframe-container"
+                      />
                     )}
                   </div>
                 </div>

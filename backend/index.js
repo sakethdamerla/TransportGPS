@@ -87,7 +87,14 @@ async function fetchVehiclesListFromRemote() {
     vehiclesList = Object.values(vehiclesList);
   }
 
-  // Prevent cache poisoning if the API returned an error object wrapped in an array
+  // Prevent cache poisoning if the API returned an error object wrapped in an array or a bot-protection block
+  const deniedItem = Array.isArray(vehiclesList) && vehiclesList.find(v => v && v.message && (v.message.includes('Access denied') || v.message.includes('Imunify360')));
+  if (deniedItem) {
+    const err = new Error(`Remote API blocked IP: ${deniedItem.message}`);
+    err.statusCode = 403;
+    throw err;
+  }
+
   if (vehiclesList.length === 1 && vehiclesList[0] && vehiclesList[0].Error) {
     const err = new Error(`Remote API returned error: ${vehiclesList[0].Error}`);
     err.statusCode = 400;
@@ -103,7 +110,7 @@ async function fetchVehiclesListFromRemote() {
         const tokenVal = urlObj.searchParams.get('token');
         const vehicleVal = urlObj.searchParams.get('vehicle');
         if (tokenVal && vehicleVal) {
-          vehicle.uiiframe = `http://localhost:5000/api/proxy-livefeed?token=${tokenVal}&vehicle=${vehicleVal}`;
+          vehicle.uiiframe = `/api/proxy-livefeed?token=${tokenVal}&vehicle=${vehicleVal}`;
         } else {
           vehicle.uiiframe = cleanedUrl;
         }
