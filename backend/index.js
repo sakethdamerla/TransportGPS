@@ -123,7 +123,7 @@ async function fetchVehiclesListFromRemote() {
 }
 
 // Cache updating logic
-async function updateCache() {
+async function updateCache(throwOnError = false) {
   try {
     const fetched = await fetchVehiclesListFromRemote();
     
@@ -166,7 +166,7 @@ async function updateCache() {
     console.log(`[Cache] Successfully updated. Count: ${cachedVehiclesList.length} vehicles.`);
   } catch (err) {
     console.error('[Cache Error] Background update failed:', err.message);
-    if (cachedVehiclesList.length === 0) {
+    if (throwOnError) {
       throw err;
     }
   }
@@ -176,7 +176,7 @@ async function updateCache() {
 app.get('/api/vehicles', async (req, res) => {
   try {
     if (cachedVehiclesList.length === 0) {
-      await updateCache();
+      await updateCache(true);
     }
     return res.json({ success: true, count: cachedVehiclesList.length, data: cachedVehiclesList });
   } catch (error) {
@@ -199,7 +199,7 @@ app.get('/api/vehicle/:vehicleNumber', async (req, res) => {
 
   try {
     if (cachedVehiclesList.length === 0) {
-      await updateCache();
+      await updateCache(true);
     }
     
     const normalizedInput = normalizeVehicleNumber(vehicleNumber);
@@ -243,7 +243,7 @@ app.get('/api/vehicle/:vehicleNumber/playback', async (req, res) => {
 
   try {
     if (cachedVehiclesList.length === 0) {
-      await updateCache();
+      await updateCache(true);
     }
 
     const normalizedInput = normalizeVehicleNumber(vehicleNumber);
@@ -407,13 +407,13 @@ app.get('/api/proxy-livefeed', async (req, res) => {
 async function initCachePoller() {
   try {
     console.log('[Cache] Initializing vehicles cache...');
-    await updateCache();
+    await updateCache(false);
   } catch (e) {
     console.warn('[Cache Warning] Initial vehicle load failed on startup. Will retry on request or next poller cycle.');
   }
   
-  // Update cache every 3 seconds
-  setInterval(updateCache, 3000);
+  // Update cache every 3 seconds (pass false to prevent throwing in interval callback)
+  setInterval(() => updateCache(false), 3000);
 }
 
 app.listen(PORT, async () => {
