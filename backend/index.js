@@ -36,6 +36,7 @@ async function fetchVehiclesListFromRemote() {
   const params = new URLSearchParams();
   params.append('Username', username);
   params.append('Password', password);
+  params.append('items', 'all');
 
   const apiResponse = await axios.post(url, params, {
     headers: {
@@ -84,6 +85,13 @@ async function fetchVehiclesListFromRemote() {
 
   if (!Array.isArray(vehiclesList)) {
     vehiclesList = Object.values(vehiclesList);
+  }
+
+  // Prevent cache poisoning if the API returned an error object wrapped in an array
+  if (vehiclesList.length === 1 && vehiclesList[0] && vehiclesList[0].Error) {
+    const err = new Error(`Remote API returned error: ${vehiclesList[0].Error}`);
+    err.statusCode = 400;
+    throw err;
   }
 
   // Clean up uiiframe URL formatting and rewrite to local proxy to fix 404 assets
