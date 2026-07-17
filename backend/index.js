@@ -412,8 +412,10 @@ async function initCachePoller() {
     console.warn('[Cache Warning] Initial vehicle load failed on startup. Will retry on request or next poller cycle.');
   }
   
-  // Update cache every 3 seconds (pass false to prevent throwing in interval callback)
-  setInterval(() => updateCache(false), 3000);
+  // Update cache every 15 seconds to avoid triggering bot protection / rate limits (default 15000ms)
+  const POLL_INTERVAL = parseInt(process.env.GPS_POLL_INTERVAL_MS, 10) || 15000;
+  console.log(`[Cache] Background poller scheduled every ${POLL_INTERVAL / 1000}s.`);
+  setInterval(() => updateCache(false), POLL_INTERVAL);
 }
 
 app.listen(PORT, async () => {
